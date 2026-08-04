@@ -576,12 +576,17 @@ async function createNewTournamentBracket(e) {
   const rawText = (teamsInput && teamsInput.value) ? teamsInput.value : '';
   const rawTeams = rawText.split('\n').map(t => t.trim()).filter(t => t.length > 0);
 
-  if (rawTeams.length < 8) {
-    if (window.showToast) showToast('Please enter at least 8 team names (one per line).', 'error');
+  if (rawTeams.length < 4) {
+    if (window.showToast) showToast('Please enter at least 4 team names (one per line).', 'error');
     return;
   }
 
   const teams = rawTeams.slice(0, 8);
+  // If exactly 7 teams (or 5/6 teams), automatically pad remaining slot with a BYE for seed #1 advantage
+  while (teams.length < 8) {
+    teams.push('BYE (Auto-Advance)');
+  }
+
   const tourneyTypeInput = document.getElementById('admin-b-tournament-type');
   const tourneyType = tourneyTypeInput ? tourneyTypeInput.value : 'Single Elimination';
 
@@ -591,7 +596,7 @@ async function createNewTournamentBracket(e) {
     id: 'tourney_' + Date.now(),
     name: name,
     game: game,
-    format: `8-Team ${tourneyType}`,
+    format: `${rawTeams.length}-Team ${tourneyType}`,
     seriesFormat: seriesFormat,
     status: 'In Progress',
     rounds: roundsData,
