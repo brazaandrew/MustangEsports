@@ -668,9 +668,17 @@ app.delete('/api/brackets/:id', (req, res) => {
   res.status(404).json({ success: false, message: 'Bracket not found' });
 });
 
-// Fallback route to index.html for unknown routes
+// Fallback route for unknown routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  const rootIndexPath = path.join(__dirname, '..', 'public', 'index.html');
+
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  } else if (fs.existsSync(rootIndexPath)) {
+    return res.sendFile(rootIndexPath);
+  }
+  res.status(404).json({ success: false, message: 'Resource not found' });
 });
 
 if (process.env.NODE_ENV !== 'test' && require.main === module) {
