@@ -148,6 +148,21 @@ async function loadAdminRosters() {
   } catch (e) { console.error(e); }
 }
 
+function previewPlayerPhoto(e) {
+  const file = e.target.files[0];
+  const preview = document.getElementById('p-image-preview');
+  const hiddenInput = document.getElementById('p-image');
+
+  if (file && preview && hiddenInput) {
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      preview.src = evt.target.result;
+      hiddenInput.value = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
 function editPlayer(id) {
   const player = adminRostersData.find(p => p.id === id);
   if (!player) return;
@@ -172,7 +187,11 @@ function editPlayer(id) {
   document.getElementById('p-flag').value = player.flag || '';
   document.getElementById('p-agent').value = player.signatureAgent || '';
   document.getElementById('p-gear').value = player.gear || '';
-  document.getElementById('p-image').value = player.image || '';
+  
+  const imgVal = player.image || '/assets/images/player_phantom.png';
+  document.getElementById('p-image').value = imgVal;
+  const pPreview = document.getElementById('p-image-preview');
+  if (pPreview) pPreview.src = imgVal;
 
   if (window.showToast) showToast(`Editing player ${player.handle}`);
 }
@@ -207,6 +226,8 @@ async function savePlayer(e) {
       if (window.showToast) showToast(json.message || 'Player saved successfully!');
       document.getElementById('add-player-form').reset();
       if (document.getElementById('p-id')) document.getElementById('p-id').value = '';
+      if (document.getElementById('p-image-preview')) document.getElementById('p-image-preview').src = '/assets/images/player_phantom.png';
+      if (document.getElementById('p-image')) document.getElementById('p-image').value = '/assets/images/player_phantom.png';
       loadAdminRosters();
     }
   } catch (e) {

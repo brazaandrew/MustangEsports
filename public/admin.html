@@ -169,9 +169,17 @@
                 <input type="text" id="p-gear" class="form-control" placeholder="Logitech G Pro Superlight">
               </div>
 
+              <div class="form-group" style="text-align: center; margin-top: 16px; margin-bottom: 16px;">
+                <label class="form-label" style="text-align: left;">Player Photo Preview</label>
+                <div style="background: var(--bg-dark); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; justify-content: center; align-items: center;">
+                  <img id="p-image-preview" src="/assets/images/player_phantom.png" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;" alt="Player Photo Preview">
+                </div>
+              </div>
+
               <div class="form-group">
-                <label class="form-label">Image URL / Path</label>
-                <input type="text" id="p-image" class="form-control" value="/assets/images/player_phantom.png">
+                <label class="form-label">Upload Player Photo (Local File Picker)</label>
+                <input type="file" id="p-image-file" class="form-control" accept="image/*" onchange="previewPlayerPhoto(event)">
+                <input type="hidden" id="p-image" value="/assets/images/player_phantom.png">
               </div>
 
               <button type="submit" class="btn-yellow" style="width: 100%;">Save Player Profile</button>
