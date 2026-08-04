@@ -1,7 +1,18 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
+require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+let supabase = null;
+
+if (supabaseUrl && supabaseKey && supabaseUrl.includes('supabase.co')) {
+  try {
+    supabase = createClient(supabaseUrl, supabaseKey);
+    console.log('Connect: Supabase PostgreSQL Database connected');
+  } catch (err) {
+    console.warn('Supabase client connection error:', err.message);
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
