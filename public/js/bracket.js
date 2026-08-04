@@ -177,7 +177,14 @@ function renderBracketTree(bracket) {
     headerTitle.innerHTML = `${bracket.name} <span style="font-size:0.75rem; background:rgba(255,215,0,0.15); color:var(--yellow-primary); padding:4px 10px; border-radius:12px; margin-left:12px; vertical-align:middle;">${bracket.game} • ${bracket.seriesFormat || bracket.format}</span>`;
   }
 
-  let html = `<div class="bracket-tree-container">`;
+  let html = '';
+
+  // 1. ROUND ROBIN & SWISS STANDINGS BOARD
+  if (bracket.format.includes('Round Robin') || bracket.format.includes('Swiss')) {
+    html += renderStandingsBoard(bracket);
+  }
+
+  html += `<div class="bracket-tree-container">`;
 
   bracket.rounds.forEach((round, roundIdx) => {
     html += `
@@ -186,40 +193,45 @@ function renderBracketTree(bracket) {
     `;
 
     round.matches.forEach((m, matchIdx) => {
-      const isT1Winner = m.winner && m.team1 && m.winner === m.team1.name;
-      const isT2Winner = m.winner && m.team2 && m.winner === m.team2.name;
+      if (m.isLobby) {
+        // Free-for-all Lobby Node
+        html += renderLobbyNode(m, roundIdx, matchIdx, isAdminPage);
+      } else {
+        const isT1Winner = m.winner && m.team1 && m.winner === m.team1.name;
+        const isT2Winner = m.winner && m.team2 && m.winner === m.team2.name;
 
-      const clickAttr = isAdminPage ? `onclick="openMatchScoreModal('${roundIdx}', '${matchIdx}')"` : '';
-      const staticClass = isAdminPage ? '' : 'static';
+        const clickAttr = isAdminPage ? `onclick="openMatchScoreModal('${roundIdx}', '${matchIdx}')"` : '';
+        const staticClass = isAdminPage ? '' : 'static';
 
-      html += `
-        <div class="bracket-match-node ${staticClass}" ${clickAttr}>
-          <div class="bracket-match-header">
-            <span>MATCH #${m.id.toUpperCase()}</span>
-            <span style="color:${m.status === 'COMPLETED' ? '#00FF66' : 'var(--yellow-primary)'}; font-weight:700;">
-              ${m.status || 'PENDING'}
-            </span>
-          </div>
-
-          <div class="bracket-team-slot ${isT1Winner ? 'winner' : ''}">
-            <div class="bracket-team-info">
-              <span class="bracket-seed">${m.team1 ? m.team1.seed || '-' : '-'}</span>
-              <img src="${m.team1 ? m.team1.logo : 'https://api.dicebear.com/7.x/identicon/svg?seed=TBD'}" class="bracket-team-logo" alt="logo">
-              <span class="bracket-team-name">${m.team1 ? m.team1.name : 'TBD'}</span>
+        html += `
+          <div class="bracket-match-node ${staticClass}" ${clickAttr}>
+            <div class="bracket-match-header">
+              <span>MATCH #${m.id.toUpperCase()}</span>
+              <span style="color:${m.status === 'COMPLETED' ? '#00FF66' : 'var(--yellow-primary)'}; font-weight:700;">
+                ${m.status || 'PENDING'}
+              </span>
             </div>
-            <span class="bracket-score ${isT1Winner ? 'winner-score' : ''}">${m.team1 && m.team1.score !== undefined ? m.team1.score : '-'}</span>
-          </div>
 
-          <div class="bracket-team-slot ${isT2Winner ? 'winner' : ''}">
-            <div class="bracket-team-info">
-              <span class="bracket-seed">${m.team2 ? m.team2.seed || '-' : '-'}</span>
-              <img src="${m.team2 ? m.team2.logo : 'https://api.dicebear.com/7.x/identicon/svg?seed=TBD'}" class="bracket-team-logo" alt="logo">
-              <span class="bracket-team-name">${m.team2 ? m.team2.name : 'TBD'}</span>
+            <div class="bracket-team-slot ${isT1Winner ? 'winner' : ''}">
+              <div class="bracket-team-info">
+                <span class="bracket-seed">${m.team1 ? m.team1.seed || '-' : '-'}</span>
+                <img src="${m.team1 ? m.team1.logo : 'https://api.dicebear.com/7.x/identicon/svg?seed=TBD'}" class="bracket-team-logo" alt="logo">
+                <span class="bracket-team-name">${m.team1 ? m.team1.name : 'TBD'}</span>
+              </div>
+              <span class="bracket-score ${isT1Winner ? 'winner-score' : ''}">${m.team1 && m.team1.score !== undefined ? m.team1.score : '-'}</span>
             </div>
-            <span class="bracket-score ${isT2Winner ? 'winner-score' : ''}">${m.team2 && m.team2.score !== undefined ? m.team2.score : '-'}</span>
+
+            <div class="bracket-team-slot ${isT2Winner ? 'winner' : ''}">
+              <div class="bracket-team-info">
+                <span class="bracket-seed">${m.team2 ? m.team2.seed || '-' : '-'}</span>
+                <img src="${m.team2 ? m.team2.logo : 'https://api.dicebear.com/7.x/identicon/svg?seed=TBD'}" class="bracket-team-logo" alt="logo">
+                <span class="bracket-team-name">${m.team2 ? m.team2.name : 'TBD'}</span>
+              </div>
+              <span class="bracket-score ${isT2Winner ? 'winner-score' : ''}">${m.team2 && m.team2.score !== undefined ? m.team2.score : '-'}</span>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      }
     });
 
     html += `</div>`;
@@ -232,7 +244,7 @@ function renderBracketTree(bracket) {
         <div class="bracket-round-header">TOURNAMENT CHAMPION</div>
         <div class="champion-card">
           <div class="champion-title">GRAND CHAMPION</div>
-          <img src="${bracket.champion.logo}" style="width:50px; height:50px; object-fit:contain; margin:8px auto;" alt="Champion Logo">
+          <img src="${bracket.champion.logo || '/assets/images/logo.png'}" style="width:50px; height:50px; object-fit:contain; margin:8px auto;" alt="Champion Logo">
           <div class="champion-team">${bracket.champion.name}</div>
         </div>
       </div>
@@ -243,7 +255,178 @@ function renderBracketTree(bracket) {
   container.innerHTML = html;
 }
 
-// Modal for editing scores and setting winners
+// Standings Leaderboard Table Generator for Round Robin & Swiss
+function renderStandingsBoard(bracket) {
+  const standings = {};
+
+  bracket.rounds.forEach(r => {
+    r.matches.forEach(m => {
+      if (m.team1 && m.team1.name && m.team1.name !== 'TBD') {
+        if (!standings[m.team1.name]) standings[m.team1.name] = { name: m.team1.name, logo: m.team1.logo, played: 0, wins: 0, losses: 0, pts: 0 };
+      }
+      if (m.team2 && m.team2.name && m.team2.name !== 'TBD') {
+        if (!standings[m.team2.name]) standings[m.team2.name] = { name: m.team2.name, logo: m.team2.logo, played: 0, wins: 0, losses: 0, pts: 0 };
+      }
+
+      if (m.status === 'COMPLETED' && m.winner) {
+        if (m.team1 && standings[m.team1.name]) {
+          standings[m.team1.name].played++;
+          if (m.winner === m.team1.name) {
+            standings[m.team1.name].wins++;
+            standings[m.team1.name].pts += 3;
+          } else {
+            standings[m.team1.name].losses++;
+          }
+        }
+        if (m.team2 && standings[m.team2.name]) {
+          standings[m.team2.name].played++;
+          if (m.winner === m.team2.name) {
+            standings[m.team2.name].wins++;
+            standings[m.team2.name].pts += 3;
+          } else {
+            standings[m.team2.name].losses++;
+          }
+        }
+      }
+    });
+  });
+
+  const sorted = Object.values(standings).sort((a, b) => b.pts - a.pts || b.wins - a.wins);
+
+  return `
+    <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:20px; margin-bottom:28px;">
+      <h3 style="font-family:var(--font-heading); font-size:1.2rem; color:var(--yellow-primary); margin-bottom:14px; text-transform:uppercase;">
+        🏆 ${bracket.format.includes('Swiss') ? 'SWISS SYSTEM STANDINGS' : 'ROUND ROBIN LEADERBOARD STANDINGS'}
+      </h3>
+      <table style="width:100%; border-collapse:collapse; font-size:0.9rem; text-align:left;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border-subtle); color:var(--text-secondary); text-transform:uppercase; font-family:var(--font-mono); font-size:0.75rem;">
+            <th style="padding:10px;">Rank</th>
+            <th style="padding:10px;">Team</th>
+            <th style="padding:10px; text-align:center;">Played</th>
+            <th style="padding:10px; text-align:center;">Wins</th>
+            <th style="padding:10px; text-align:center;">Losses</th>
+            <th style="padding:10px; text-align:center;">Points</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map((t, idx) => `
+            <tr style="border-bottom:1px solid var(--border-subtle); background:${idx === 0 ? 'rgba(255,215,0,0.06)' : 'transparent'};">
+              <td style="padding:10px; font-weight:700; font-family:var(--font-mono); color:${idx === 0 ? 'var(--yellow-primary)' : 'inherit'};">#${idx + 1}</td>
+              <td style="padding:10px; display:flex; align-items:center; gap:10px;">
+                <img src="${t.logo}" style="width:24px; height:24px; object-fit:contain;">
+                <strong>${t.name}</strong>
+              </td>
+              <td style="padding:10px; text-align:center;">${t.played}</td>
+              <td style="padding:10px; text-align:center; color:#00FF66; font-weight:700;">${t.wins}</td>
+              <td style="padding:10px; text-align:center; color:var(--red-accent);">${t.losses}</td>
+              <td style="padding:10px; text-align:center; font-family:var(--font-mono); font-weight:700; color:var(--yellow-primary);">${t.pts} PTS</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// Render Free-for-all Lobby Node
+function renderLobbyNode(m, roundIdx, matchIdx, isAdminPage) {
+  const clickAttr = isAdminPage ? `onclick="openLobbyModal('${roundIdx}', '${matchIdx}')"` : '';
+  const staticClass = isAdminPage ? '' : 'static';
+
+  return `
+    <div class="bracket-match-node ${staticClass}" style="min-width:280px;" ${clickAttr}>
+      <div class="bracket-match-header">
+        <span>${m.lobbyName}</span>
+        <span style="color:${m.status === 'COMPLETED' ? '#00FF66' : 'var(--yellow-primary)'}; font-weight:700;">
+          ${m.status || 'PENDING'}
+        </span>
+      </div>
+      ${m.teams.map((t, idx) => `
+        <div class="bracket-team-slot">
+          <div class="bracket-team-info">
+            <span class="bracket-seed">#${idx + 1}</span>
+            <span class="bracket-team-name">${t.name}</span>
+          </div>
+          <span class="bracket-score">${t.score || 0} PTS</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Helper to open score modal for standard 1v1 match
+function openLobbyModal(roundIdx, matchIdx) {
+  const isAdmin = !!localStorage.getItem('mustang_admin_token') || window.location.pathname.includes('admin.html');
+  if (!isAdmin) {
+    if (window.showToast) showToast('Lobby score editing is restricted to the Admin Portal.', 'error');
+    return;
+  }
+
+  if (!currentBracketData) return;
+  const match = currentBracketData.rounds[roundIdx].matches[matchIdx];
+
+  const modalHtml = `
+    <div id="bracket-score-modal" class="modal-overlay active" style="z-index:9000; background:rgba(0,0,0,0.85);">
+      <div class="modal-content fade-in" style="max-width:480px; border-top:4px solid var(--yellow-primary);">
+        <h3 style="font-family:var(--font-heading); font-size:1.4rem; color:var(--text-primary); text-transform:uppercase; margin-bottom:6px;">UPDATE LOBBY SCORES</h3>
+        <p style="color:var(--text-muted); font-size:0.82rem; margin-bottom:20px;">${match.lobbyName}</p>
+        
+        <form onsubmit="saveLobbyScores(event, ${roundIdx}, ${matchIdx})">
+          <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+            ${match.teams.map((t, idx) => `
+              <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-dark); padding:10px 14px; border-radius:6px; border:1px solid var(--border-subtle);">
+                <strong>#${idx + 1} ${t.name}</strong>
+                <input type="number" id="lobby-score-${idx}" class="form-control" value="${t.score || 0}" min="0" style="width:90px; text-align:center;">
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="display:flex; gap:12px;">
+            <button type="button" class="btn-outline" style="flex:1;" onclick="closeBracketModal()">Cancel</button>
+            <button type="submit" class="btn-yellow" style="flex:1;">Save Lobby Scores</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  const existing = document.getElementById('bracket-score-modal');
+  if (existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+async function saveLobbyScores(e, roundIdx, matchIdx) {
+  e.preventDefault();
+  const match = currentBracketData.rounds[roundIdx].matches[matchIdx];
+
+  match.teams.forEach((t, idx) => {
+    const input = document.getElementById(`lobby-score-${idx}`);
+    if (input) t.score = parseInt(input.value, 10) || 0;
+  });
+  match.status = 'COMPLETED';
+
+  // Sort teams in lobby by highest points
+  match.teams.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  closeBracketModal();
+  renderBracketTree(currentBracketData);
+  if (window.showToast) showToast('Lobby scores updated!');
+
+  try {
+    const res = await fetch('/api/brackets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(currentBracketData)
+    });
+    const json = await res.json();
+    if (json.success && json.brackets) {
+      allBracketsHistory = json.brackets;
+      renderBracketSelectorUI();
+    }
+  } catch (err) {}
+}
+
 function openMatchScoreModal(roundIdx, matchIdx) {
   const isAdmin = !!localStorage.getItem('mustang_admin_token') || window.location.pathname.includes('admin.html');
   if (!isAdmin) {
@@ -323,8 +506,9 @@ async function saveMatchScore(e, roundIdx, matchIdx) {
   match.status = 'COMPLETED';
 
   const winningTeamObj = (winnerName === match.team1.name) ? match.team1 : match.team2;
+  const losingTeamObj = (winnerName === match.team1.name) ? match.team2 : match.team1;
 
-  // Advance winner to next match if applicable
+  // Advance winner to next match
   if (match.nextMatchId) {
     for (let r of currentBracketData.rounds) {
       for (let m of r.matches) {
@@ -338,18 +522,32 @@ async function saveMatchScore(e, roundIdx, matchIdx) {
       }
     }
   } else {
-    // Grand Finals Winner becomes Tournament Champion!
+    // Final Match Winner becomes Tournament Champion
     currentBracketData.champion = {
       name: winningTeamObj.name,
       logo: winningTeamObj.logo
     };
   }
 
+  // Advance loser to lower bracket if applicable (Double Elimination)
+  if (match.loserMatchId) {
+    for (let r of currentBracketData.rounds) {
+      for (let m of r.matches) {
+        if (m.id === match.loserMatchId) {
+          if (match.loserMatchSlot === 'team1') {
+            m.team1 = { ...losingTeamObj, score: 0 };
+          } else if (match.loserMatchSlot === 'team2') {
+            m.team2 = { ...losingTeamObj, score: 0 };
+          }
+        }
+      }
+    }
+  }
+
   closeBracketModal();
   renderBracketTree(currentBracketData);
   if (window.showToast) showToast(`Winner recorded: ${winnerName}!`);
 
-  // Save to backend history
   try {
     const res = await fetch('/api/brackets', {
       method: 'POST',
@@ -364,7 +562,7 @@ async function saveMatchScore(e, roundIdx, matchIdx) {
   } catch (err) {}
 }
 
-// Generate New Custom 8-Team Bracket
+// Generate New Custom 8-Team Bracket for ALL 5 FORMATS
 async function createNewTournamentBracket(e) {
   e.preventDefault();
   const nameInput = document.getElementById('b-name') || document.getElementById('admin-b-name');
@@ -384,8 +582,41 @@ async function createNewTournamentBracket(e) {
   }
 
   const teams = rawTeams.slice(0, 8);
+  const tourneyTypeInput = document.getElementById('admin-b-tournament-type');
+  const tourneyType = tourneyTypeInput ? tourneyTypeInput.value : 'Single Elimination';
 
-  // Set Round Names based on Series Format Choice (Bo1, Bo3, Bo5, Hybrid)
+  const roundsData = generateBracketStructure(tourneyType, teams, seriesFormat);
+
+  const newBracket = {
+    id: 'tourney_' + Date.now(),
+    name: name,
+    game: game,
+    format: `8-Team ${tourneyType}`,
+    seriesFormat: seriesFormat,
+    status: 'In Progress',
+    rounds: roundsData,
+    champion: null
+  };
+
+  currentBracketData = newBracket;
+  renderBracketTree(currentBracketData);
+  if (window.showToast) showToast(`Created ${tourneyType} Tournament Bracket!`);
+
+  try {
+    const res = await fetch('/api/brackets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(currentBracketData)
+    });
+    const json = await res.json();
+    if (json.success && json.brackets) {
+      allBracketsHistory = json.brackets;
+      renderBracketSelectorUI();
+    }
+  } catch (err) {}
+}
+
+function generateBracketStructure(tourneyType, teams, seriesFormat) {
   let qfName = 'Quarterfinals (Best of 3)';
   let sfName = 'Semifinals (Best of 3)';
   let gfName = 'Grand Finals (Best of 5)';
@@ -404,60 +635,197 @@ async function createNewTournamentBracket(e) {
     gfName = 'Grand Finals (Best of 3)';
   }
 
-  const tourneyTypeInput = document.getElementById('admin-b-tournament-type');
-  const tourneyType = tourneyTypeInput ? tourneyTypeInput.value : 'Single Elimination';
+  const teamObjs = teams.map((t, idx) => ({
+    seed: idx + 1,
+    name: t,
+    logo: idx === 0 ? '/assets/images/logo.png' : 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(t),
+    score: 0
+  }));
 
-  const newBracket = {
-    id: 'tourney_' + Date.now(),
-    name: name,
-    game: game,
-    format: `8-Team ${tourneyType}`,
-    seriesFormat: seriesFormat,
-    status: 'In Progress',
-    rounds: [
+  if (tourneyType === 'Double Elimination') {
+    return [
       {
-        name: qfName,
+        name: `WINNER'S BRACKET — Quarterfinals`,
+        type: 'WB',
         matches: [
-          { id: 'qf1', nextMatchId: 'sf1', nextMatchSlot: 'team1', team1: { seed: 1, name: teams[0], logo: '/assets/images/logo.png', score: 0 }, team2: { seed: 8, name: teams[7], logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(teams[7]), score: 0 }, winner: null, status: 'PENDING' },
-          { id: 'qf2', nextMatchId: 'sf1', nextMatchSlot: 'team2', team1: { seed: 4, name: teams[3], logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(teams[3]), score: 0 }, team2: { seed: 5, name: teams[4], logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(teams[4]), score: 0 }, winner: null, status: 'PENDING' },
-          { id: 'qf3', nextMatchId: 'sf2', nextMatchSlot: 'team1', team1: { seed: 2, name: teams[1], logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(teams[1]), score: 0 }, team2: { seed: 7, name: teams[6], logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(teams[6]), score: 0 }, winner: null, status: 'PENDING' },
-          { id: 'qf4', nextMatchId: 'sf2', nextMatchSlot: 'team2', team1: { seed: 3, name: teams[2], logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(teams[2]), score: 0 }, team2: { seed: 6, name: teams[5], logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(teams[5]), score: 0 }, winner: null, status: 'PENDING' }
+          { id: 'wb_qf1', nextMatchId: 'wb_sf1', nextMatchSlot: 'team1', loserMatchId: 'lb_r1_1', loserMatchSlot: 'team1', team1: { ...teamObjs[0] }, team2: { ...teamObjs[7] }, winner: null, status: 'PENDING' },
+          { id: 'wb_qf2', nextMatchId: 'wb_sf1', nextMatchSlot: 'team2', loserMatchId: 'lb_r1_1', loserMatchSlot: 'team2', team1: { ...teamObjs[3] }, team2: { ...teamObjs[4] }, winner: null, status: 'PENDING' },
+          { id: 'wb_qf3', nextMatchId: 'wb_sf2', nextMatchSlot: 'team1', loserMatchId: 'lb_r1_2', loserMatchSlot: 'team1', team1: { ...teamObjs[1] }, team2: { ...teamObjs[6] }, winner: null, status: 'PENDING' },
+          { id: 'wb_qf4', nextMatchId: 'wb_sf2', nextMatchSlot: 'team2', loserMatchId: 'lb_r1_2', loserMatchSlot: 'team2', team1: { ...teamObjs[2] }, team2: { ...teamObjs[5] }, winner: null, status: 'PENDING' }
         ]
       },
       {
-        name: sfName,
+        name: `WINNER'S BRACKET — Semifinals`,
+        type: 'WB',
         matches: [
-          { id: 'sf1', nextMatchId: 'gf1', nextMatchSlot: 'team1', team1: null, team2: null, winner: null, status: 'PENDING' },
-          { id: 'sf2', nextMatchId: 'gf1', nextMatchSlot: 'team2', team1: null, team2: null, winner: null, status: 'PENDING' }
+          { id: 'wb_sf1', nextMatchId: 'wb_gf', nextMatchSlot: 'team1', loserMatchId: 'lb_sf1', loserMatchSlot: 'team1', team1: null, team2: null, winner: null, status: 'PENDING' },
+          { id: 'wb_sf2', nextMatchId: 'wb_gf', nextMatchSlot: 'team2', loserMatchId: 'lb_sf2', loserMatchSlot: 'team1', team1: null, team2: null, winner: null, status: 'PENDING' }
         ]
       },
       {
-        name: gfName,
+        name: `WINNER'S FINALS`,
+        type: 'WB',
         matches: [
-          { id: 'gf1', nextMatchId: null, nextMatchSlot: null, team1: null, team2: null, winner: null, status: 'PENDING' }
+          { id: 'wb_gf', nextMatchId: 'grand_finals', nextMatchSlot: 'team1', loserMatchId: 'lb_gf', loserMatchSlot: 'team1', team1: null, team2: null, winner: null, status: 'PENDING' }
+        ]
+      },
+      {
+        name: `LOSER'S BRACKET — Round 1`,
+        type: 'LB',
+        matches: [
+          { id: 'lb_r1_1', nextMatchId: 'lb_sf1', nextMatchSlot: 'team2', team1: null, team2: null, winner: null, status: 'PENDING' },
+          { id: 'lb_r1_2', nextMatchId: 'lb_sf2', nextMatchSlot: 'team2', team1: null, team2: null, winner: null, status: 'PENDING' }
+        ]
+      },
+      {
+        name: `LOSER'S BRACKET — Semifinals`,
+        type: 'LB',
+        matches: [
+          { id: 'lb_sf1', nextMatchId: 'lb_gf', nextMatchSlot: 'team2', team1: null, team2: null, winner: null, status: 'PENDING' },
+          { id: 'lb_sf2', nextMatchId: 'lb_gf', nextMatchSlot: 'team1', team1: null, team2: null, winner: null, status: 'PENDING' }
+        ]
+      },
+      {
+        name: `LOSER'S FINALS`,
+        type: 'LB',
+        matches: [
+          { id: 'lb_gf', nextMatchId: 'grand_finals', nextMatchSlot: 'team2', team1: null, team2: null, winner: null, status: 'PENDING' }
+        ]
+      },
+      {
+        name: `GRAND FINALS (${gfName})`,
+        type: 'GF',
+        matches: [
+          { id: 'grand_finals', nextMatchId: null, nextMatchSlot: null, team1: null, team2: null, winner: null, status: 'PENDING' }
         ]
       }
-    ],
-    champion: null
-  };
+    ];
+  }
 
-  currentBracketData = newBracket;
-  renderBracketTree(currentBracketData);
-  if (window.showToast) showToast(`Created ${tourneyType} Tournament Bracket!`);
+  if (tourneyType === 'Round Robin') {
+    const rounds = [];
+    const t = [...teamObjs];
+    const n = t.length;
 
-  // Save to backend history
-  try {
-    const res = await fetch('/api/brackets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(currentBracketData)
-    });
-    const json = await res.json();
-    if (json.success && json.brackets) {
-      allBracketsHistory = json.brackets;
-      renderBracketSelectorUI();
+    for (let r = 0; r < n - 1; r++) {
+      const matches = [];
+      for (let i = 0; i < n / 2; i++) {
+        const home = t[i];
+        const away = t[n - 1 - i];
+        matches.push({
+          id: `rr_r${r+1}_m${i+1}`,
+          team1: { ...home, score: 0 },
+          team2: { ...away, score: 0 },
+          winner: null,
+          status: 'PENDING'
+        });
+      }
+      rounds.push({ name: `Round Robin — Round ${r + 1}`, matches });
+      t.splice(1, 0, t.pop());
     }
-  } catch (err) {}
+    return rounds;
+  }
+
+  if (tourneyType === 'Swiss') {
+    return [
+      {
+        name: 'Swiss Round 1 (0-0 Record)',
+        matches: [
+          { id: 'sw_r1_1', team1: { ...teamObjs[0] }, team2: { ...teamObjs[7] }, winner: null, status: 'PENDING' },
+          { id: 'sw_r1_2', team1: { ...teamObjs[1] }, team2: { ...teamObjs[6] }, winner: null, status: 'PENDING' },
+          { id: 'sw_r1_3', team1: { ...teamObjs[2] }, team2: { ...teamObjs[5] }, winner: null, status: 'PENDING' },
+          { id: 'sw_r1_4', team1: { ...teamObjs[3] }, team2: { ...teamObjs[4] }, winner: null, status: 'PENDING' }
+        ]
+      },
+      {
+        name: 'Swiss Round 2 (High / Low Record)',
+        matches: [
+          { id: 'sw_r2_1', team1: { ...teamObjs[0] }, team2: { ...teamObjs[1] }, winner: null, status: 'PENDING' },
+          { id: 'sw_r2_2', team1: { ...teamObjs[2] }, team2: { ...teamObjs[3] }, winner: null, status: 'PENDING' },
+          { id: 'sw_r2_3', team1: { ...teamObjs[4] }, team2: { ...teamObjs[5] }, winner: null, status: 'PENDING' },
+          { id: 'sw_r2_4', team1: { ...teamObjs[6] }, team2: { ...teamObjs[7] }, winner: null, status: 'PENDING' }
+        ]
+      },
+      {
+        name: 'Swiss Round 3 (Qualification & Elimination)',
+        matches: [
+          { id: 'sw_r3_1', team1: { ...teamObjs[0] }, team2: { ...teamObjs[2] }, winner: null, status: 'PENDING' },
+          { id: 'sw_r3_2', team1: { ...teamObjs[1] }, team2: { ...teamObjs[3] }, winner: null, status: 'PENDING' },
+          { id: 'sw_r3_3', team1: { ...teamObjs[4] }, team2: { ...teamObjs[6] }, winner: null, status: 'PENDING' },
+          { id: 'sw_r3_4', team1: { ...teamObjs[5] }, team2: { ...teamObjs[7] }, winner: null, status: 'PENDING' }
+        ]
+      },
+      {
+        name: 'Swiss Round 4 (Decider Matches)',
+        matches: [
+          { id: 'sw_r4_1', team1: { ...teamObjs[1] }, team2: { ...teamObjs[4] }, winner: null, status: 'PENDING' },
+          { id: 'sw_r4_2', team1: { ...teamObjs[3] }, team2: { ...teamObjs[5] }, winner: null, status: 'PENDING' }
+        ]
+      }
+    ];
+  }
+
+  if (tourneyType === 'Free-for-all') {
+    return [
+      {
+        name: 'Group Stage Lobbies',
+        matches: [
+          {
+            id: 'ffa_group_a',
+            isLobby: true,
+            lobbyName: 'Group Lobby A (Top 2 Advance)',
+            teams: [ { ...teamObjs[0], score: 0 }, { ...teamObjs[1], score: 0 }, { ...teamObjs[2], score: 0 }, { ...teamObjs[3], score: 0 } ],
+            status: 'PENDING'
+          },
+          {
+            id: 'ffa_group_b',
+            isLobby: true,
+            lobbyName: 'Group Lobby B (Top 2 Advance)',
+            teams: [ { ...teamObjs[4], score: 0 }, { ...teamObjs[5], score: 0 }, { ...teamObjs[6], score: 0 }, { ...teamObjs[7], score: 0 } ],
+            status: 'PENDING'
+          }
+        ]
+      },
+      {
+        name: 'Grand Championship Lobby',
+        matches: [
+          {
+            id: 'ffa_final_lobby',
+            isLobby: true,
+            lobbyName: 'Final Championship Lobby (4 Teams)',
+            teams: [ { name: 'Lobby A #1', score: 0 }, { name: 'Lobby A #2', score: 0 }, { name: 'Lobby B #1', score: 0 }, { name: 'Lobby B #2', score: 0 } ],
+            status: 'PENDING'
+          }
+        ]
+      }
+    ];
+  }
+
+  // Default: Single Elimination
+  return [
+    {
+      name: qfName,
+      matches: [
+        { id: 'qf1', nextMatchId: 'sf1', nextMatchSlot: 'team1', team1: { ...teamObjs[0] }, team2: { ...teamObjs[7] }, winner: null, status: 'PENDING' },
+        { id: 'qf2', nextMatchId: 'sf1', nextMatchSlot: 'team2', team1: { ...teamObjs[3] }, team2: { ...teamObjs[4] }, winner: null, status: 'PENDING' },
+        { id: 'qf3', nextMatchId: 'sf2', nextMatchSlot: 'team1', team1: { ...teamObjs[1] }, team2: { ...teamObjs[6] }, winner: null, status: 'PENDING' },
+        { id: 'qf4', nextMatchId: 'sf2', nextMatchSlot: 'team2', team1: { ...teamObjs[2] }, team2: { ...teamObjs[5] }, winner: null, status: 'PENDING' }
+      ]
+    },
+    {
+      name: sfName,
+      matches: [
+        { id: 'sf1', nextMatchId: 'gf1', nextMatchSlot: 'team1', team1: null, team2: null, winner: null, status: 'PENDING' },
+        { id: 'sf2', nextMatchId: 'gf1', nextMatchSlot: 'team2', team1: null, team2: null, winner: null, status: 'PENDING' }
+      ]
+    },
+    {
+      name: gfName,
+      matches: [
+        { id: 'gf1', nextMatchId: null, nextMatchSlot: null, team1: null, team2: null, winner: null, status: 'PENDING' }
+      ]
+    }
+  ];
 }
 
 // Select Tournament Format Card UI Handler
