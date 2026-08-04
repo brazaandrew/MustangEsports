@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin CMS — Mustang Esports</title>
+  <meta name="description" content="Mustang Esports Admin Management Portal for updating site content, rosters, schedule, news, and merch.">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/animations.css">
+</head>
+<body style="background: var(--bg-dark);">
+
+  <!-- Admin Login Auth Modal Overlay -->
+  <div id="admin-auth-overlay" class="modal-overlay active" style="z-index: 5000; background: rgba(11, 12, 14, 0.95);">
+    <div class="modal-content fade-in" style="max-width: 440px; text-align: center; border-top: 4px solid var(--yellow-primary);">
+      <img src="/assets/images/logo.png" style="width: 60px; height: 60px; margin: 0 auto 16px;" alt="Mustang Logo">
+      <h2 style="font-family: var(--font-heading); font-size: 1.8rem; text-transform: uppercase; color: var(--text-primary);">ADMIN PORTAL LOGIN</h2>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 24px;">Enter administrative credentials to modify website content.</p>
+
+      <form id="admin-login-form">
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label" for="admin-user">Username</label>
+          <input type="text" id="admin-user" class="form-control" value="admin" required>
+        </div>
+
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label" for="admin-pass">Password</label>
+          <input type="password" id="admin-pass" class="form-control" value="mustang2026" required>
+        </div>
+
+        <button type="submit" class="btn-yellow" style="width: 100%; margin-top: 8px;">
+          Authenticate Admin
+        </button>
+      </form>
+
+      <div style="margin-top: 16px; border-top: 1px solid var(--border-subtle); padding-top: 16px;">
+        <button type="button" class="btn-outline" style="width: 100%; font-size: 0.8rem;" onclick="demoLogin()">
+          One-Click Demo Admin Login
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin CMS Dashboard -->
+  <div id="admin-dashboard" style="display: none; min-height: 100vh; flex-direction: column;">
+    
+    <!-- Admin Top Nav -->
+    <header class="navbar" style="border-bottom: 1px solid var(--border-subtle); background: var(--bg-surface-solid);">
+      <div class="nav-brand">
+        <img src="/assets/images/logo.png" alt="Mustang Logo">
+        <span>MUSTANG <em>ADMIN CMS</em></span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <a href="/index.html" class="btn-outline" style="padding: 8px 16px; font-size: 0.8rem;" target="_blank">View Live Website ↗</a>
+        <button class="btn-yellow" style="padding: 8px 16px; font-size: 0.8rem;" onclick="adminLogout()">Logout</button>
+      </div>
+    </header>
+
+    <!-- Admin Content Container -->
+    <div class="section-container" style="padding: 40px 24px;">
+      
+      <!-- Management Tabs -->
+      <div class="game-filter-tabs" style="margin-bottom: 32px;">
+        <button type="button" class="filter-btn admin-tab-btn active" data-tab="tab-rosters">ROSTERS & PLAYERS</button>
+        <button type="button" class="filter-btn admin-tab-btn" data-tab="tab-matches">MATCH FIXTURES</button>
+        <button type="button" class="filter-btn admin-tab-btn" data-tab="tab-news">NEWS & MEDIA</button>
+        <button type="button" class="filter-btn admin-tab-btn" data-tab="tab-shop">MERCH SHOP</button>
+        <button type="button" class="filter-btn admin-tab-btn" data-tab="tab-inquiries">SCOUTING & INQUIRIES</button>
+        <button type="button" class="filter-btn admin-tab-btn" data-tab="tab-brackets">BRACKET MANAGER</button>
+        <button type="button" class="filter-btn admin-tab-btn" data-tab="tab-games">GAME DETAILS & LOGOS</button>
+        <button type="button" class="filter-btn admin-tab-btn" data-tab="tab-settings">SITE SETTINGS</button>
+      </div>
+
+      <!-- TAB 1: ROSTERS -->
+      <div id="tab-rosters" class="admin-tab-content fade-in">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--yellow-primary); margin-bottom: 16px; text-transform: uppercase;">ACTIVE PRO PLAYERS</h3>
+            
+            <div style="overflow-x: auto; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase;">
+                    <th style="padding: 10px;">Photo</th>
+                    <th style="padding: 10px;">Handle</th>
+                    <th style="padding: 10px;">Real Name</th>
+                    <th style="padding: 10px;">Game</th>
+                    <th style="padding: 10px;">Role</th>
+                    <th style="padding: 10px;">Stats</th>
+                    <th style="padding: 10px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-rosters-list">
+                  <!-- Loaded dynamically via admin.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Add Player Form -->
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 24px; border-radius: var(--radius-md);">
+            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--text-primary); margin-bottom: 16px; text-transform: uppercase;">ADD / EDIT PLAYER</h3>
+            
+            <form id="add-player-form" onsubmit="savePlayer(event)">
+              <div class="form-group">
+                <label class="form-label">Player Handle (IGN) *</label>
+                <input type="text" id="p-handle" class="form-control" placeholder="e.g. PHANTOM" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Real Name *</label>
+                <input type="text" id="p-name" class="form-control" placeholder="e.g. Lucas Vance" required>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="form-label">Esport Game</label>
+                  <select id="p-game" class="form-control">
+                    <option value="MLBB">MLBB</option>
+                    <option value="CODM">CODM</option>
+                    <option value="HOK">HOK</option>
+                    <option value="VALORANT">VALORANT</option>
+                    <option value="LEAGUE OF LEGENDS">LEAGUE OF LEGENDS</option>
+                    <option value="TEKKEN 8">TEKKEN 8</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Role</label>
+                  <select id="p-role" class="form-control">
+                    <!-- Injected dynamically based on selected game -->
+                  </select>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="form-label">KDA / Stat</label>
+                  <input type="text" id="p-kda" class="form-control" placeholder="1.45">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Win Rate</label>
+                  <input type="text" id="p-winrate" class="form-control" placeholder="78%">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="form-label">Country Name</label>
+                  <input type="text" id="p-country" class="form-control" placeholder="USA">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Country Flag Emoji</label>
+                  <input type="text" id="p-flag" class="form-control" placeholder="🇺🇸">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Signature Mains</label>
+                <input type="text" id="p-agent" class="form-control" placeholder="Jett / Yoru">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Pro Hardware Gear</label>
+                <input type="text" id="p-gear" class="form-control" placeholder="Logitech G Pro Superlight">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Image URL / Path</label>
+                <input type="text" id="p-image" class="form-control" value="/assets/images/player_phantom.png">
+              </div>
+
+              <button type="submit" class="btn-yellow" style="width: 100%;">Save Player Profile</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: MATCHES -->
+      <div id="tab-matches" class="admin-tab-content fade-in" style="display: none;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--yellow-primary); margin-bottom: 16px; text-transform: uppercase;">UPCOMING FIXTURES & SCHEDULE</h3>
+            <div id="admin-matches-list"></div>
+          </div>
+
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 24px; border-radius: var(--radius-md);">
+            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--text-primary); margin-bottom: 16px; text-transform: uppercase;">ADD MATCH FIXTURE</h3>
+            
+            <form id="add-match-form" onsubmit="saveMatch(event)">
+              <div class="form-group">
+                <label class="form-label">Tournament Name *</label>
+                <input type="text" id="m-tournament" class="form-control" placeholder="VCT Masters Finals" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Stage / Phase</label>
+                <input type="text" id="m-stage" class="form-control" placeholder="Grand Finals - Bo5">
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="form-label">Esport Game</label>
+                  <select id="m-game" class="form-control">
+                    <option value="MLBB">MLBB</option>
+                    <option value="CODM">CODM</option>
+                    <option value="HOK">HOK</option>
+                    <option value="VALORANT">VALORANT</option>
+                    <option value="LEAGUE OF LEGENDS">LEAGUE OF LEGENDS</option>
+                    <option value="TEKKEN 8">TEKKEN 8</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Opponent Team *</label>
+                  <input type="text" id="m-opponent" class="form-control" placeholder="Team Apex" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Venue / City</label>
+                <input type="text" id="m-venue" class="form-control" placeholder="Cyber Arena, Seoul">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Stream Embed URL</label>
+                <input type="url" id="m-stream" class="form-control" placeholder="https://youtube.com/embed/...">
+              </div>
+
+              <button type="submit" class="btn-yellow" style="width: 100%;">Create Match Fixture</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: NEWS -->
+      <div id="tab-news" class="admin-tab-content fade-in" style="display: none;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--yellow-primary); margin-bottom: 16px; text-transform: uppercase;">PUBLISHED ARTICLES</h3>
+            <div id="admin-news-list"></div>
+          </div>
+
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 24px; border-radius: var(--radius-md);">
+            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--text-primary); margin-bottom: 16px; text-transform: uppercase;">PUBLISH NEWS ARTICLE</h3>
+            
+            <form id="add-news-form" onsubmit="saveNews(event)">
+              <div class="form-group">
+                <label class="form-label">Article Title *</label>
+                <input type="text" id="n-title" class="form-control" placeholder="Mustang Wins Championship..." required>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="form-label">Category</label>
+                  <select id="n-category" class="form-control">
+                    <option value="Tournaments">Tournaments</option>
+                    <option value="Roster News">Roster News</option>
+                    <option value="Announcements">Announcements</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Author</label>
+                  <input type="text" id="n-author" class="form-control" value="Mustang Media Team">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Short Summary</label>
+                <input type="text" id="n-summary" class="form-control" placeholder="Brief 1-sentence teaser summary...">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Full Article Content</label>
+                <textarea id="n-content" class="form-control" placeholder="Write full article body text..."></textarea>
+              </div>
+
+              <button type="submit" class="btn-yellow" style="width: 100%;">Publish News Article</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: SHOP -->
+      <div id="tab-shop" class="admin-tab-content fade-in" style="display: none;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--yellow-primary); margin-bottom: 16px; text-transform: uppercase;">STORE MERCH CATALOG</h3>
+            <div id="admin-shop-list"></div>
+          </div>
+
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 24px; border-radius: var(--radius-md);">
+            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--text-primary); margin-bottom: 16px; text-transform: uppercase;">ADD MERCH PRODUCT</h3>
+            
+            <form id="add-shop-form" onsubmit="saveShopProduct(event)">
+              <div class="form-group">
+                <label class="form-label">Product Name *</label>
+                <input type="text" id="sp-name" class="form-control" placeholder="Mustang Pro Jersey 2026" required>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="form-label">Category</label>
+                  <select id="sp-category" class="form-control">
+                    <option value="Apparel">Apparel</option>
+                    <option value="Accessories">Accessories</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Price ($) *</label>
+                  <input type="number" step="0.01" id="sp-price" class="form-control" placeholder="79.99" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Product Badge / Tag</label>
+                <input type="text" id="sp-tag" class="form-control" placeholder="BESTSELLER / NEW DROP">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea id="sp-desc" class="form-control" placeholder="Product details..."></textarea>
+              </div>
+
+              <button type="submit" class="btn-yellow" style="width: 100%;">Add Store Product</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: INQUIRIES -->
+      <div id="tab-inquiries" class="admin-tab-content fade-in" style="display: none;">
+        <h3 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--yellow-primary); margin-bottom: 16px; text-transform: uppercase;">RECIEVED SCOUTING APPS & MESSAGES</h3>
+        <div id="admin-inquiries-list"></div>
+      </div>
+
+      <!-- TAB 6: BRACKET MANAGER -->
+      <div id="tab-brackets" class="admin-tab-content fade-in" style="display: none;">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 24px; border-radius: var(--radius-md); margin-bottom: 24px;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--yellow-primary); margin-bottom: 16px; text-transform: uppercase;">TOURNAMENT BRACKET GENERATOR (CHALLONGE MATCHMAKING)</h3>
+          
+          <form onsubmit="createNewTournamentBracket(event)">
+            <!-- Tournament Format Cards Section (Challonge Style) -->
+            <div style="margin-bottom: 24px;">
+              <label class="form-label" style="font-size: 1rem; color: var(--yellow-primary); margin-bottom: 4px;">Tournament format</label>
+              <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 16px;">Select the tournament structure for team progression.</p>
+              
+              <input type="hidden" id="admin-b-tournament-type" value="Single Elimination">
+
+              <div class="format-card-grid">
+                <!-- 1. Single Elimination -->
+                <div class="format-card active" onclick="selectTournamentFormatCard('Single Elimination', this)">
+                  <div class="format-card-title">Single Elimination</div>
+                  <div class="format-card-diagram">
+                    <svg width="100%" height="100%" viewBox="0 0 120 60" fill="none">
+                      <rect x="5" y="5" width="35" height="15" rx="3" fill="#2A2E3D" stroke="#E5A93C" stroke-width="1.5"/>
+                      <rect x="5" y="38" width="35" height="15" rx="3" fill="#2A2E3D" stroke="#E5A93C" stroke-width="1.5"/>
+                      <path d="M40 12H65V45H40" stroke="#FFD700" stroke-width="2"/>
+                      <path d="M65 28H80" stroke="#FFD700" stroke-width="2"/>
+                      <rect x="80" y="20" width="35" height="16" rx="3" fill="#E5A93C"/>
+                    </svg>
+                  </div>
+                  <div class="format-card-desc">The loser of each match will be immediately eliminated from the tournament.</div>
+                </div>
+
+                <!-- 2. Double Elimination -->
+                <div class="format-card" onclick="selectTournamentFormatCard('Double Elimination', this)">
+                  <div class="format-card-title">Double Elimination</div>
+                  <div class="format-card-diagram">
+                    <svg width="100%" height="100%" viewBox="0 0 120 60" fill="none">
+                      <text x="5" y="10" fill="#7A8099" font-size="8" font-weight="bold">WINNER'S BRACKET</text>
+                      <rect x="5" y="14" width="30" height="10" rx="2" fill="#2A2E3D"/>
+                      <rect x="45" y="14" width="30" height="10" rx="2" fill="#2A2E3D"/>
+                      <text x="5" y="36" fill="#7A8099" font-size="8" font-weight="bold">LOSER'S BRACKET</text>
+                      <rect x="5" y="40" width="30" height="10" rx="2" fill="#2A2E3D"/>
+                      <path d="M35 19H45M35 45H45" stroke="#E5A93C" stroke-width="1.5"/>
+                    </svg>
+                  </div>
+                  <div class="format-card-desc">A participant gets eliminated upon having lost two games or matches.</div>
+                </div>
+
+                <!-- 3. Round Robin -->
+                <div class="format-card" onclick="selectTournamentFormatCard('Round Robin', this)">
+                  <div class="format-card-title">Round Robin</div>
+                  <div class="format-card-diagram">
+                    <svg width="100%" height="100%" viewBox="0 0 120 60" fill="none">
+                      <rect x="25" y="5" width="70" height="50" rx="4" fill="#1A1C23" stroke="#2A2E3D"/>
+                      <rect x="27" y="7" width="15" height="11" fill="#E5A93C"/>
+                      <rect x="44" y="20" width="15" height="11" fill="#E5A93C"/>
+                      <rect x="61" y="33" width="15" height="11" fill="#E5A93C"/>
+                      <rect x="78" y="44" width="15" height="9" fill="#E5A93C"/>
+                    </svg>
+                  </div>
+                  <div class="format-card-desc">Each participant meets all other participants in turn.</div>
+                </div>
+
+                <!-- 4. Swiss -->
+                <div class="format-card" onclick="selectTournamentFormatCard('Swiss', this)">
+                  <div class="format-card-title">Swiss</div>
+                  <div class="format-card-diagram">
+                    <svg width="100%" height="100%" viewBox="0 0 120 60" fill="none">
+                      <rect x="10" y="8" width="100" height="12" rx="3" fill="#2A2E3D"/>
+                      <text x="55" y="17" fill="#AAA" font-size="8" text-anchor="middle">0 - 0</text>
+                      <rect x="10" y="25" width="45" height="12" rx="3" fill="#2A2E3D"/>
+                      <text x="32" y="34" fill="#AAA" font-size="8" text-anchor="middle">1 - 0</text>
+                      <rect x="65" y="25" width="45" height="12" rx="3" fill="#2A2E3D"/>
+                      <text x="87" y="34" fill="#AAA" font-size="8" text-anchor="middle">0 - 1</text>
+                      <rect x="10" y="42" width="30" height="12" rx="3" fill="#E5A93C"/>
+                      <text x="25" y="51" fill="#000" font-size="8" font-weight="bold" text-anchor="middle">2 - 0</text>
+                    </svg>
+                  </div>
+                  <div class="format-card-desc">Participants are paired to ensure that competitors play opponents with a similar score.</div>
+                </div>
+
+                <!-- 5. Free-for-all -->
+                <div class="format-card" onclick="selectTournamentFormatCard('Free-for-all', this)">
+                  <div class="format-card-title">Free-for-all</div>
+                  <div class="format-card-diagram">
+                    <svg width="100%" height="100%" viewBox="0 0 120 60" fill="none">
+                      <rect x="10" y="5" width="100" height="24" rx="4" fill="#2A2E3D"/>
+                      <path d="M60 29V42" stroke="#E5A93C" stroke-width="2"/>
+                      <rect x="25" y="42" width="20" height="14" rx="3" fill="#E5A93C"/>
+                      <rect x="50" y="42" width="20" height="14" rx="3" fill="#E5A93C"/>
+                      <rect x="75" y="42" width="20" height="14" rx="3" fill="#E5A93C"/>
+                    </svg>
+                  </div>
+                  <div class="format-card-desc">Several participants are grouped in one match and the winners will advance.</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+              <div class="form-group">
+                <label class="form-label">Tournament Name *</label>
+                <input type="text" id="admin-b-name" class="form-control" placeholder="Mustang Invitational 2026" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Esport Game Title</label>
+                <select id="admin-b-game" class="form-control">
+                  <option value="VALORANT">VALORANT</option>
+                  <option value="CS2">CS2</option>
+                  <option value="MLBB">MLBB</option>
+                  <option value="LEAGUE OF LEGENDS">LEAGUE OF LEGENDS</option>
+                  <option value="CODM">CODM</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label class="form-label" style="margin: 0;">Participating Teams / Athletes (8 Teams, 1 per line) *</label>
+                <button type="button" class="btn-outline" style="padding: 4px 12px; font-size: 0.78rem;" onclick="shuffleTeamsInput('admin-b-teams')">Shuffle Seeds / Teams</button>
+              </div>
+              <textarea id="admin-b-teams" class="form-control" rows="8" placeholder="Mustang Esports&#10;Sentinels&#10;Fnatic&#10;Paper Rex&#10;G2 Esports&#10;DRX&#10;T1&#10;Team Liquid" required></textarea>
+            </div>
+
+            <button type="submit" class="btn-yellow" style="width: 100%;">Generate & Save Tournament Bracket</button>
+          </form>
+        </div>
+
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 24px; border-radius: var(--radius-md);">
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--text-primary); margin-bottom: 16px; text-transform: uppercase;">ACTIVE BRACKET & SAVED HISTORY</h3>
+          
+          <div class="bracket-history-bar"></div>
+
+          <div class="tournament-bracket-wrapper" style="background: var(--bg-dark); border-radius: var(--radius-md); padding: 16px;">
+            <div id="bracket-tree-render"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 7: GAMES & LOGOS -->
+      <div id="tab-games" class="admin-tab-content fade-in" style="display: none;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--yellow-primary); margin-bottom: 16px; text-transform: uppercase;">REGISTERED ESPORT GAMES & LOGOS</h3>
+            <div id="admin-games-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;"></div>
+          </div>
+
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 24px; border-radius: var(--radius-md);">
+            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--text-primary); margin-bottom: 16px; text-transform: uppercase;">CREATE / EDIT GAME DETAILS</h3>
+            
+            <form id="add-game-form" onsubmit="saveGameDetails(event)">
+              <input type="hidden" id="g-id">
+
+              <div class="form-group">
+                <label class="form-label">Game Title / Name *</label>
+                <input type="text" id="g-name" class="form-control" placeholder="e.g. OVERWATCH 2" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Genre / Category</label>
+                <input type="text" id="g-genre" class="form-control" placeholder="e.g. Hero Shooter">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Game Description</label>
+                <textarea id="g-desc" class="form-control" rows="3" placeholder="Brief summary of the game..."></textarea>
+              </div>
+
+              <div class="form-group" style="text-align: center; margin-bottom: 16px;">
+                <label class="form-label" style="text-align: left;">Game Logo Preview</label>
+                <div style="background: var(--bg-dark); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; justify-content: center; align-items: center;">
+                  <img id="g-logo-preview" src="/assets/images/logo.png" style="max-width: 80px; max-height: 80px; object-fit: contain;" alt="Game Logo Preview">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Upload Official Game Logo (PNG/SVG)</label>
+                <input type="file" id="g-logo-upload" class="form-control" accept="image/png, image/jpeg, image/svg+xml, image/webp" onchange="previewGameLogo(event)">
+              </div>
+
+              <button type="submit" class="btn-yellow" style="width: 100%;">Save Game Details & Logo</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 8: SETTINGS -->
+      <div id="tab-settings" class="admin-tab-content fade-in" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 24px; border-radius: var(--radius-md);">
+            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--text-primary); margin-bottom: 16px; text-transform: uppercase;">BRANDING & LOGO</h3>
+            
+            <form id="update-logo-form" onsubmit="updateLogo(event)">
+              <div class="form-group" style="text-align: center; margin-bottom: 24px;">
+                <img src="/assets/images/logo.png" id="current-logo-preview" style="width: 120px; height: 120px; object-fit: contain; background: var(--bg-surface-solid); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--border-subtle);" alt="Current Logo">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Upload New Logo (PNG recommended)</label>
+                <input type="file" id="logo-upload" class="form-control" accept="image/png, image/jpeg, image/gif" required>
+              </div>
+
+              <button type="submit" class="btn-yellow" style="width: 100%;">Update Site Logo</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/bracket.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>

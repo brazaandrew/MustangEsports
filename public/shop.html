@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merch Shop — Mustang Esports</title>
+  <meta name="description" content="Official Mustang Esports merchandise shop. Pro jerseys, cyber oversized hoodies, stealth speed mousepads, and accessories.">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/animations.css">
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header class="navbar">
+    <a href="/index.html" class="nav-brand">
+      <img src="/assets/images/logo.png" alt="Mustang Esports Logo">
+      <span>MUSTANG <em>ESPORTS</em></span>
+    </a>
+
+    <nav>
+      <ul class="nav-links">
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/teams.html">Teams</a></li>
+        <li><a href="/matches.html">Matches</a></li>
+        <li><a href="/news.html">News</a></li>
+        <li><a href="/shop.html" class="active">Merch</a></li>
+        <li><a href="/about.html">About</a></li>
+        <li><a href="/contact.html">Contact</a></li>
+        <li><a href="/admin.html">Admin</a></li>
+      </ul>
+    </nav>
+
+    <div class="nav-actions">
+      <button class="mobile-nav-toggle" aria-label="Toggle Navigation">☰</button>
+    </div>
+  </header>
+
+  <!-- Page Banner Header -->
+  <section style="background: linear-gradient(180deg, rgba(26,28,35,0.8) 0%, rgba(15,16,21,1) 100%), url('/assets/images/hero_bg.png') center/cover no-repeat; padding: 60px 24px; border-bottom: 1px solid var(--border-gray);">
+    <div style="max-width: var(--container-width); margin: 0 auto;">
+      <h1 class="section-title">OFFICIAL MERCHANDISE STORE</h1>
+      <p class="section-subtitle">Gear up with the official 2026 pro jerseys, high-grade cyber hoodies, and speed mousepads.</p>
+    </div>
+  </section>
+
+  <!-- Products Section -->
+  <section class="section-container">
+    <div class="shop-grid" id="shop-grid">
+      <!-- Injected dynamically via shop.js -->
+    </div>
+  </section>
+
+  <!-- Cart Slide-out Drawer -->
+  <div class="cart-drawer-overlay"></div>
+  <aside class="cart-drawer">
+    <div class="cart-header">
+      <h3>🛒 YOUR CART</h3>
+      <button class="close-cart-btn">✕</button>
+    </div>
+    <div class="cart-body"></div>
+    <div class="cart-footer">
+      <div class="cart-total-row">
+        <span>SUBTOTAL:</span>
+        <span id="cart-subtotal">$0.00</span>
+      </div>
+      <button class="btn-yellow" style="width: 100%;" onclick="proceedToCheckout()">Proceed To Checkout →</button>
+    </div>
+  </aside>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="/assets/images/logo.png" alt="Mustang Esports">
+        <p>Mustang Esports is a premier global esports organization. Speed, power, agility, and competitive dominance in every arena.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="/teams.html">Pro Teams</a></li>
+          <li><a href="/matches.html">Schedule & Stream</a></li>
+          <li><a href="/news.html">Esports News</a></li>
+          <li><a href="/shop.html">Official Shop</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Organization</h4>
+        <ul>
+          <li><a href="/about.html">About Us</a></li>
+          <li><a href="/about.html">Brand Partners</a></li>
+          <li><a href="/contact.html">Scouting / Recruitment</a></li>
+          <li><a href="/contact.html">Press Inquiries</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Join The Stampede</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Subscribe to match alerts and exclusive drop notifications.</p>
+        <div style="display: flex; gap: 8px;">
+          <input type="email" placeholder="Your Email" class="form-control" style="padding: 8px 12px;">
+          <button class="btn-yellow" style="padding: 8px 16px;" onclick="showToast('Subscribed!')">Join</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 Mustang Esports Inc. All Rights Reserved.</div>
+      <div>Designed for Competitive Excellence.</div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/shop.js"></script>
+</body>
+</html>

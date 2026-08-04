@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mustang Esports — Official Home of the Stampede</title>
+  <meta name="description" content="Official website of Mustang Esports. Premier dark-themed competitive portal for Valorant, CS2, League of Legends, and Rocket League rosters.">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/animations.css">
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header class="navbar">
+    <a href="/index.html" class="nav-brand">
+      <img src="/assets/images/logo.png" alt="Mustang Esports Logo">
+      <span>MUSTANG <em>ESPORTS</em></span>
+    </a>
+
+    <nav>
+      <ul class="nav-links">
+        <li><a href="/index.html" class="active">Home</a></li>
+        <li><a href="/teams.html">Teams</a></li>
+        <li><a href="/matches.html">Matches</a></li>
+        <li><a href="/news.html">News</a></li>
+        <li><a href="/shop.html">Merch</a></li>
+        <li><a href="/about.html">About</a></li>
+        <li><a href="/contact.html">Contact</a></li>
+        <li><a href="/admin.html">Admin</a></li>
+      </ul>
+    </nav>
+
+    <div class="nav-actions">
+      <button class="mobile-nav-toggle" aria-label="Toggle Navigation">☰</button>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content fade-in">
+      <div class="hero-tag">DOMINATE THE ARENA</div>
+      <h1 class="hero-title">UNLEASH THE <span>STAMPEDE</span></h1>
+      <p class="hero-subtitle">Official Home of Mustang Esports — Championship rosters in Valorant, CS2, League of Legends, and Rocket League.</p>
+      
+      <div class="hero-ctas">
+        <a href="/matches.html" class="btn-yellow">🔴 Watch Live Broadcast</a>
+        <a href="/teams.html" class="btn-outline">🛡️ Explore Active Rosters</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Match Countdown Widget -->
+  <div style="max-width: var(--container-width); margin: 0 auto; padding: 0 24px;">
+    <div class="countdown-container fade-in">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <span class="tournament-badge">🔥 NEXT UPCOMING GRAND FINALS</span>
+      </div>
+
+      <div class="match-widget-grid">
+        <div class="team-versus left">
+          <div>
+            <div class="team-name" style="color: var(--yellow-primary);">Mustang Esports</div>
+            <div class="team-tagline">VCT Regional Favorites</div>
+          </div>
+          <img src="/assets/images/logo.png" class="team-logo" alt="Mustang Logo">
+        </div>
+
+        <div class="countdown-center">
+          <div class="timer-boxes">
+            <div class="time-box">
+              <div class="time-val" id="timer-days">02</div>
+              <div class="time-lbl">DAYS</div>
+            </div>
+            <span class="timer-sep">:</span>
+            <div class="time-box">
+              <div class="time-val" id="timer-hours">04</div>
+              <div class="time-lbl">HRS</div>
+            </div>
+            <span class="timer-sep">:</span>
+            <div class="time-box">
+              <div class="time-val" id="timer-mins">18</div>
+              <div class="time-lbl">MINS</div>
+            </div>
+            <span class="timer-sep">:</span>
+            <div class="time-box">
+              <div class="time-val" id="timer-secs">42</div>
+              <div class="time-lbl">SECS</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="team-versus right">
+          <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Apex" class="team-logo" alt="Team Apex Logo">
+          <div>
+            <div class="team-name">Team Apex</div>
+            <div class="team-tagline">Challenger Bracket Winners</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured Rosters Section -->
+  <section class="section-container">
+    <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+      <div>
+        <h2 class="section-title">CHAMPIONSHIP ROSTERS</h2>
+        <p class="section-subtitle">Meet the pro athletes competing under the Mustang colors worldwide.</p>
+      </div>
+      <a href="/teams.html" class="btn-outline" style="font-size: 0.85rem; padding: 10px 20px;">View All Teams →</a>
+    </div>
+
+    <div class="roster-grid" id="roster-grid">
+      <!-- Loaded dynamically via roster.js -->
+    </div>
+  </section>
+
+  <!-- Featured News Section -->
+  <section style="background: var(--bg-card); border-top: 1px solid var(--border-gray); border-bottom: 1px solid var(--border-gray); padding: 80px 0;">
+    <div class="section-container" style="padding: 0 24px;">
+      <div class="section-header">
+        <h2 class="section-title">LATEST NEWS & RECAPS</h2>
+        <p class="section-subtitle">Breaking announcements, roster moves, and tournament recaps.</p>
+      </div>
+
+      <div class="shop-grid" id="news-grid">
+        <!-- Loaded dynamically via news.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Sponsor Strip -->
+  <section class="sponsor-strip">
+    <div style="max-width: var(--container-width); margin: 0 auto; text-align: center; padding: 0 24px;">
+      <p style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;">POWERED BY INDUSTRY LEADERS</p>
+      <div class="sponsor-logos">
+        <div class="sponsor-logo-item">RAZER</div>
+        <div class="sponsor-logo-item">LOGITECH G</div>
+        <div class="sponsor-logo-item">RED BULL</div>
+        <div class="sponsor-logo-item">CORSAIR</div>
+        <div class="sponsor-logo-item">INTEL</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cart Slide-out Drawer -->
+  <div class="cart-drawer-overlay"></div>
+  <aside class="cart-drawer">
+    <div class="cart-header">
+      <h3>🛒 YOUR CART</h3>
+      <button class="close-cart-btn">✕</button>
+    </div>
+    <div class="cart-body">
+      <!-- Items dynamically injected -->
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total-row">
+        <span>SUBTOTAL:</span>
+        <span id="cart-subtotal">$0.00</span>
+      </div>
+      <button class="btn-yellow" style="width: 100%;" onclick="proceedToCheckout()">Proceed To Checkout →</button>
+    </div>
+  </aside>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="/assets/images/logo.png" alt="Mustang Esports">
+        <p>Mustang Esports is a premier global esports organization. Speed, power, agility, and competitive dominance in every arena.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="/teams.html">Pro Teams</a></li>
+          <li><a href="/matches.html">Schedule & Stream</a></li>
+          <li><a href="/news.html">Esports News</a></li>
+          <li><a href="/shop.html">Official Shop</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Organization</h4>
+        <ul>
+          <li><a href="/about.html">About Us</a></li>
+          <li><a href="/about.html">Brand Partners</a></li>
+          <li><a href="/contact.html">Scouting / Recruitment</a></li>
+          <li><a href="/contact.html">Press Inquiries</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Join The Stampede</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Subscribe to match alerts and exclusive drop notifications.</p>
+        <div style="display: flex; gap: 8px;">
+          <input type="email" placeholder="Your Email" class="form-control" style="padding: 8px 12px;">
+          <button class="btn-yellow" style="padding: 8px 16px;" onclick="showToast('Subscribed to alerts!')">Join</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 Mustang Esports Inc. All Rights Reserved.</div>
+      <div>Designed for Competitive Excellence.</div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/countdown.js"></script>
+  <script src="/js/roster.js"></script>
+  <script src="/js/news.js"></script>
+  <script src="/js/shop.js"></script>
+</body>
+</html>
