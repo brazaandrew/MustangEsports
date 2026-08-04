@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!rosterGrid) return;
 
   loadDynamicGameFilterTabs();
+  fetchRosters('All');
 
   async function loadDynamicGameFilterTabs() {
     const tabsContainer = document.querySelector('.game-filter-tabs');
