@@ -94,6 +94,8 @@ async function loadAdminData() {
 }
 
 // 1. Rosters Management
+let adminRostersData = [];
+
 async function loadAdminRosters() {
   const tableBody = document.getElementById('admin-rosters-list');
   if (!tableBody) return;
@@ -101,7 +103,8 @@ async function loadAdminRosters() {
     const res = await fetch('/api/rosters');
     const json = await res.json();
     if (json.success) {
-      tableBody.innerHTML = json.data.map(p => `
+      adminRostersData = json.data;
+      tableBody.innerHTML = adminRostersData.map(p => `
         <tr>
           <td><img src="${p.image}" style="width:36px; height:36px; border-radius:4px; object-fit:cover;"></td>
           <td><strong>${p.handle}</strong></td>
@@ -110,7 +113,8 @@ async function loadAdminRosters() {
           <td><span style="color: var(--text-primary); font-weight: 600;">${p.role}</span></td>
           <td><span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);">${p.kda} / ${p.winRate}</span></td>
           <td>
-            <button class="btn-outline" style="padding: 4px 10px; font-size:0.75rem;" onclick="deletePlayer('${p.id}')">🗑️ Delete</button>
+            <button class="btn-outline" style="padding: 4px 10px; font-size:0.75rem; margin-right:4px;" onclick="editPlayer('${p.id}')">Edit</button>
+            <button class="btn-outline" style="padding: 4px 10px; font-size:0.75rem; border-color:var(--red-accent); color:var(--red-accent);" onclick="deletePlayer('${p.id}')">Delete</button>
           </td>
         </tr>
       `).join('');
@@ -118,9 +122,41 @@ async function loadAdminRosters() {
   } catch (e) { console.error(e); }
 }
 
+function editPlayer(id) {
+  const player = adminRostersData.find(p => p.id === id);
+  if (!player) return;
+
+  const idEl = document.getElementById('p-id');
+  if (idEl) idEl.value = player.id;
+  document.getElementById('p-handle').value = player.handle || '';
+  document.getElementById('p-name').value = player.name || '';
+  
+  const gameSelect = document.getElementById('p-game');
+  if (gameSelect) {
+    gameSelect.value = player.game;
+    updateAdminRoles();
+  }
+
+  const roleSelect = document.getElementById('p-role');
+  if (roleSelect) roleSelect.value = player.role;
+
+  document.getElementById('p-kda').value = player.kda || '';
+  document.getElementById('p-winrate').value = player.winRate || '';
+  document.getElementById('p-country').value = player.country || '';
+  document.getElementById('p-flag').value = player.flag || '';
+  document.getElementById('p-agent').value = player.signatureAgent || '';
+  document.getElementById('p-gear').value = player.gear || '';
+  document.getElementById('p-image').value = player.image || '';
+
+  if (window.showToast) showToast(`Editing player ${player.handle}`);
+}
+
 async function savePlayer(e) {
   e.preventDefault();
+  const idVal = document.getElementById('p-id') ? document.getElementById('p-id').value : '';
+
   const player = {
+    id: idVal || undefined,
     handle: document.getElementById('p-handle').value,
     name: document.getElementById('p-name').value,
     game: document.getElementById('p-game').value,
@@ -142,11 +178,14 @@ async function savePlayer(e) {
     });
     const json = await res.json();
     if (json.success) {
-      showToast('Player saved successfully!');
+      if (window.showToast) showToast(json.message || 'Player saved successfully!');
       document.getElementById('add-player-form').reset();
+      if (document.getElementById('p-id')) document.getElementById('p-id').value = '';
       loadAdminRosters();
     }
-  } catch (e) { showToast('Saved player locally'); }
+  } catch (e) {
+    if (window.showToast) showToast('Player saved locally');
+  }
 }
 
 async function deletePlayer(id) {
@@ -155,10 +194,12 @@ async function deletePlayer(id) {
     const res = await fetch(`/api/admin/rosters/${id}`, { method: 'DELETE' });
     const json = await res.json();
     if (json.success) {
-      showToast('Player deleted');
+      if (window.showToast) showToast('Player deleted');
       loadAdminRosters();
     }
-  } catch (e) { showToast('Player removed'); }
+  } catch (e) {
+    if (window.showToast) showToast('Player removed');
+  }
 }
 
 // 2. Matches Management

@@ -100,8 +100,9 @@ if (strpos($path, '/api/matches/history') !== false) {
     exit;
 }
 
-if (strpos($path, '/api/rosters') !== false) {
-    $rosters = [
+if (strpos($path, '/api/admin/rosters') !== false || strpos($path, '/api/rosters') !== false) {
+    $rostersFile = __DIR__ . '/assets/rosters_store.json';
+    $defaultRosters = [
         [
             'id' => 'p1',
             'name' => 'Karl Santos',
@@ -188,11 +189,64 @@ if (strpos($path, '/api/rosters') !== false) {
         ]
     ];
 
+    if (!file_exists($rostersFile)) {
+        file_put_contents($rostersFile, json_encode($defaultRosters));
+        $rosters = $defaultRosters;
+    } else {
+        $rosters = json_decode(file_get_contents($rostersFile), true);
+        if (!is_array($rosters)) { $rosters = $defaultRosters; }
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $input = json_decode(file_get_contents('php://input'), true);
+        if ($input) {
+            $pId = !empty($input['id']) ? $input['id'] : 'p_' . time();
+            $newPlayer = [
+                'id' => $pId,
+                'name' => trim($input['name'] ?? 'Pro Player'),
+                'handle' => trim($input['handle'] ?? 'ATHLETE'),
+                'game' => trim($input['game'] ?? 'VALORANT'),
+                'role' => trim($input['role'] ?? 'Pro Athlete'),
+                'kda' => trim($input['kda'] ?? '1.20'),
+                'winRate' => trim($input['winRate'] ?? '75%'),
+                'country' => trim($input['country'] ?? 'USA'),
+                'flag' => trim($input['flag'] ?? '🇺🇸'),
+                'image' => trim($input['image'] ?? '/assets/images/player_phantom.png'),
+                'signatureAgent' => trim($input['signatureAgent'] ?? 'Main Agent'),
+                'gear' => trim($input['gear'] ?? 'Pro Gear')
+            ];
+
+            $found = false;
+            foreach ($rosters as $idx => $r) {
+                if ($r['id'] === $pId) {
+                    $rosters[$idx] = array_merge($r, $newPlayer);
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                array_unshift($rosters, $newPlayer);
+            }
+            file_put_contents($rostersFile, json_encode($rosters));
+            echo json_encode(['success' => true, 'message' => 'Player saved successfully', 'data' => $newPlayer]);
+            exit;
+        }
+    } else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+        preg_match('/\/api\/admin\/rosters\/(.+)/', $path, $matches);
+        $delId = $matches[1] ?? '';
+        $rosters = array_values(array_filter($rosters, function($r) use ($delId) { return $r['id'] !== $delId; }));
+        file_put_contents($rostersFile, json_encode($rosters));
+        echo json_encode(['success' => true, 'message' => 'Player deleted']);
+        exit;
+    }
+
     $game = $_GET['game'] ?? 'All';
     if ($game && $game !== 'All') {
-        $rosters = array_values(array_filter($rosters, function($r) use ($game) {
+        $filtered = array_values(array_filter($rosters, function($r) use ($game) {
             return strtolower($r['game']) === strtolower($game);
         }));
+        echo json_encode(['success' => true, 'count' => count($filtered), 'data' => $filtered]);
+        exit;
     }
 
     echo json_encode(['success' => true, 'count' => count($rosters), 'data' => $rosters]);

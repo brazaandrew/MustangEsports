@@ -103,6 +103,7 @@
             <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--text-primary); margin-bottom: 16px; text-transform: uppercase;">ADD / EDIT PLAYER</h3>
             
             <form id="add-player-form" onsubmit="savePlayer(event)">
+              <input type="hidden" id="p-id">
               <div class="form-group">
                 <label class="form-label">Player Handle (IGN) *</label>
                 <input type="text" id="p-handle" class="form-control" placeholder="e.g. PHANTOM" required>
