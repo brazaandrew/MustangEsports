@@ -1,26 +1,15 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "server.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "server.js"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/admin", "destination": "/public/admin.html" },
+    { "source": "/teams", "destination": "/public/teams.html" },
+    { "source": "/matches", "destination": "/public/matches.html" },
+    { "source": "/news", "destination": "/public/news.html" },
+    { "source": "/shop", "destination": "/public/shop.html" },
+    { "source": "/about", "destination": "/public/about.html" },
+    { "source": "/contact", "destination": "/public/contact.html" },
+    { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }
