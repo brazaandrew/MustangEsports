@@ -182,7 +182,10 @@
                 <input type="hidden" id="p-image" value="/assets/images/player_phantom.png">
               </div>
 
-              <button type="submit" class="btn-yellow" style="width: 100%;">Save Player Profile</button>
+              <div style="display: flex; gap: 12px; margin-top: 16px;">
+                <button type="submit" id="save-player-btn" class="btn-yellow" style="flex: 1;">Save Player Profile</button>
+                <button type="button" id="cancel-player-edit-btn" class="btn-outline" style="display: none; flex: 1;" onclick="cancelPlayerEdit()">Cancel Edit</button>
+              </div>
             </form>
           </div>
         </div>

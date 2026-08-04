@@ -179,7 +179,20 @@ function editPlayer(id) {
   }
 
   const roleSelect = document.getElementById('p-role');
-  if (roleSelect) roleSelect.value = player.role;
+  if (roleSelect) {
+    // Check if player's role is in the dropdown options; if not, add it
+    let exists = false;
+    for (let opt of roleSelect.options) {
+      if (opt.value === player.role) { exists = true; break; }
+    }
+    if (!exists && player.role) {
+      const opt = document.createElement('option');
+      opt.value = player.role;
+      opt.innerText = player.role;
+      roleSelect.appendChild(opt);
+    }
+    roleSelect.value = player.role;
+  }
 
   document.getElementById('p-kda').value = player.kda || '';
   document.getElementById('p-winrate').value = player.winRate || '';
@@ -193,7 +206,30 @@ function editPlayer(id) {
   const pPreview = document.getElementById('p-image-preview');
   if (pPreview) pPreview.src = imgVal;
 
+  const saveBtn = document.getElementById('save-player-btn');
+  if (saveBtn) saveBtn.innerText = `Update ${player.handle}'s Profile`;
+  const cancelBtn = document.getElementById('cancel-player-edit-btn');
+  if (cancelBtn) cancelBtn.style.display = 'block';
+
+  const form = document.getElementById('add-player-form');
+  if (form) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
   if (window.showToast) showToast(`Editing player ${player.handle}`);
+}
+
+function cancelPlayerEdit() {
+  const form = document.getElementById('add-player-form');
+  if (form) form.reset();
+  const idEl = document.getElementById('p-id');
+  if (idEl) idEl.value = '';
+  const imgPreview = document.getElementById('p-image-preview');
+  if (imgPreview) imgPreview.src = '/assets/images/player_phantom.png';
+  const imgHidden = document.getElementById('p-image');
+  if (imgHidden) imgHidden.value = '/assets/images/player_phantom.png';
+  const saveBtn = document.getElementById('save-player-btn');
+  if (saveBtn) saveBtn.innerText = 'Save Player Profile';
+  const cancelBtn = document.getElementById('cancel-player-edit-btn');
+  if (cancelBtn) cancelBtn.style.display = 'none';
 }
 
 async function savePlayer(e) {
@@ -224,14 +260,13 @@ async function savePlayer(e) {
     const json = await res.json();
     if (json.success) {
       if (window.showToast) showToast(json.message || 'Player saved successfully!');
-      document.getElementById('add-player-form').reset();
-      if (document.getElementById('p-id')) document.getElementById('p-id').value = '';
-      if (document.getElementById('p-image-preview')) document.getElementById('p-image-preview').src = '/assets/images/player_phantom.png';
-      if (document.getElementById('p-image')) document.getElementById('p-image').value = '/assets/images/player_phantom.png';
+      cancelPlayerEdit();
       loadAdminRosters();
     }
   } catch (e) {
     if (window.showToast) showToast('Player saved locally');
+    cancelPlayerEdit();
+    loadAdminRosters();
   }
 }
 
