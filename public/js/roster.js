@@ -50,15 +50,30 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetch(`/api/rosters?game=${encodeURIComponent(game)}`);
       const json = await res.json();
-      if (json.success) {
+      if (json.success && json.data && json.data.length > 0) {
         renderRosters(json.data);
+        return;
       }
     } catch (err) {
       console.error('Failed to load rosters API:', err);
     }
+
+    // Fallback if API is offline
+    const filtered = (game && game !== 'All') 
+      ? defaultFallbackRosters.filter(p => p.game.toLowerCase() === game.toLowerCase())
+      : defaultFallbackRosters;
+    renderRosters(filtered);
   }
 
   function renderRosters(players) {
+    if (!players || players.length === 0) {
+      rosterGrid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-muted);">
+          No athletes found for this game category.
+        </div>
+      `;
+      return;
+    }
     rosterGrid.innerHTML = players.map(player => `
       <div class="player-card fade-in" onclick="openPlayerModal('${player.id}')">
         <div class="player-image-wrap">
@@ -86,19 +101,96 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('');
   }
 
-  // Handle Tab Clicks
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const selectedGame = btn.getAttribute('data-game');
-      fetchRosters(selectedGame);
-    });
-  });
-
   // Initial Load
   fetchRosters('All');
 });
+
+const defaultFallbackRosters = [
+  {
+    id: 'p1',
+    name: 'Karl Santos',
+    handle: 'KARL',
+    game: 'MLBB',
+    role: 'Jungler / Assassin',
+    kda: '4.95',
+    winRate: '86%',
+    country: 'Philippines',
+    flag: '🇵🇭',
+    image: '/assets/images/player_phantom.png',
+    signatureAgent: 'Ling / Fanny / Hayabusa',
+    gear: 'ROG Phone 8 Pro, RedMagic Cyber Controller'
+  },
+  {
+    id: 'p2',
+    name: 'Ethan Vance',
+    handle: 'STRIKER',
+    game: 'CODM',
+    role: 'Slayer / Sniper',
+    kda: '3.42',
+    winRate: '82%',
+    country: 'USA',
+    flag: '🇺🇸',
+    image: '/assets/images/player_vortex.png',
+    signatureAgent: 'DL Q33 / Locus / Switchblade',
+    gear: 'iPad Pro 12.9, Razer Gaming Sleeves'
+  },
+  {
+    id: 'p3',
+    name: 'Chen Wei',
+    handle: 'TIGER',
+    game: 'HOK',
+    role: 'Clash Lane / Captain',
+    kda: '5.10',
+    winRate: '88%',
+    country: 'China',
+    flag: '🇨🇳',
+    image: '/assets/images/player_cypher.png',
+    signatureAgent: 'Mayene / Guan Yu / Allain',
+    gear: 'IQOO 12 Pro, Corsair Gaming Trigger'
+  },
+  {
+    id: 'p4',
+    name: 'Lucas Vance',
+    handle: 'PHANTOM',
+    game: 'VALORANT',
+    role: 'Duelist / Entry',
+    kda: '1.48',
+    winRate: '78%',
+    country: 'USA',
+    flag: '🇺🇸',
+    image: '/assets/images/player_apex.png',
+    signatureAgent: 'Jett / Yoru / Iso',
+    gear: 'Logitech G Pro X Superlight 2, Huntsman V3 Pro'
+  },
+  {
+    id: 'p5',
+    name: 'Jin-Woo Park',
+    handle: 'SOLAR',
+    game: 'LEAGUE OF LEGENDS',
+    role: 'Mid Lane',
+    kda: '4.80',
+    winRate: '80%',
+    country: 'South Korea',
+    flag: '🇰🇷',
+    image: '/assets/images/player_solar.png',
+    signatureAgent: 'Azir / Ahri / LeBlanc',
+    gear: 'Corsair Sabre RGB, K70 RGB PRO'
+  },
+  {
+    id: 'p6',
+    name: 'Arslan Malik',
+    handle: 'KSTRIKE',
+    game: 'TEKKEN 8',
+    role: 'FGC Specialist',
+    kda: '92% Set Win',
+    winRate: '92%',
+    country: 'Pakistan',
+    flag: '🇵🇰',
+    image: '/assets/images/player_ronin.png',
+    signatureAgent: 'Kazuya / Jin / Mishima',
+    gear: 'Qanba Obsidian 2 Arcade Stick, Hitbox Leverless'
+  }
+];
 
 // Player Detail Modal Popup
 async function openPlayerModal(playerId) {
