@@ -34,6 +34,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+const GAME_ROLES_MAP = {
+  'VALORANT': ['Duelist / Entry', 'Initiator / Recon', 'Controller / Smokes', 'Sentinel / Anchor', 'IGL / Captain'],
+  'MLBB': ['Jungler / Assassin', 'EXP Lane / Fighter', 'Gold Lane / Marksman', 'Mid Lane / Mage', 'Roamer / Tank / Support', 'Head Coach / Analyst'],
+  'CODM': ['Slayer / Entry', 'Sniper / Anchor', 'Objective / Support', 'Flex / Sub-DPS', 'IGL / Captain'],
+  'HOK': ['Clash Lane / Fighter', 'Farm Lane / Marksman', 'Mid Lane / Mage', 'Jungler / Assassin', 'Support / Tank / Captain'],
+  'LEAGUE OF LEGENDS': ['Top Lane', 'Jungle', 'Mid Lane', 'ADC / Bot', 'Support', 'Head Coach'],
+  'TEKKEN 8': ['Point / Main Fighter', 'FGC Specialist', 'Anchor / Captain', 'Sub / Reserve'],
+  'CS2': ['AWPer / Sniper', 'Entry Fragger', 'IGL / Captain', 'Support / Lurker', 'Rifler']
+};
+
+function updateAdminRoles() {
+  const pGameSelect = document.getElementById('p-game');
+  const pRoleSelect = document.getElementById('p-role');
+  if (!pGameSelect || !pRoleSelect) return;
+
+  const selectedGame = pGameSelect.value;
+  const roles = GAME_ROLES_MAP[selectedGame] || ['Core / Starter', 'Captain / IGL', 'Flex / Sub', 'Coach / Manager', 'Reserve / Bench'];
+
+  const currentRole = pRoleSelect.value;
+  pRoleSelect.innerHTML = roles.map(r => `<option value="${r}">${r}</option>`).join('');
+
+  if (currentRole && roles.includes(currentRole)) {
+    pRoleSelect.value = currentRole;
+  }
+}
+
 function checkAdminAuth() {
   const token = localStorage.getItem('mustang_admin_token');
   const authOverlay = document.getElementById('admin-auth-overlay');
