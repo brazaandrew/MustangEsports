@@ -262,11 +262,11 @@ async function savePlayer(e) {
       if (window.showToast) showToast(json.message || 'Player saved successfully!');
       cancelPlayerEdit();
       loadAdminRosters();
+    } else {
+      alert('Failed to save: ' + (json.message || 'Unknown error'));
     }
   } catch (e) {
-    if (window.showToast) showToast('Player saved locally');
-    cancelPlayerEdit();
-    loadAdminRosters();
+    alert('Network error or server failed to respond.');
   }
 }
 
@@ -278,9 +278,11 @@ async function deletePlayer(id) {
     if (json.success) {
       if (window.showToast) showToast('Player deleted');
       loadAdminRosters();
+    } else {
+      alert('Failed to delete: ' + (json.message || 'Unknown error'));
     }
   } catch (e) {
-    if (window.showToast) showToast('Player removed');
+    alert('Network error or server failed to respond.');
   }
 }
 
