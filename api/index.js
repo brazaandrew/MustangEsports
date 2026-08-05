@@ -347,13 +347,56 @@ app.get('/api/matches/history', (req, res) => {
   res.json({ success: true, count: pastMatches.length, data: pastMatches });
 });
 
-app.get('/api/rosters', (req, res) => {
+app.get('/api/rosters', async (req, res) => {
   const game = req.query.game;
-  let filtered = rosters;
-  if (game && game !== 'All') {
-    filtered = rosters.filter(r => r.game.toLowerCase() === game.toLowerCase());
+  let supabaseRosters = [];
+  
+  if (supabase) {
+    try {
+      let query = supabase.from('rosters').select('*');
+      if (game && game !== 'All') {
+        query = query.ilike('game', `%${game}%`);
+      }
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (!error && data) {
+        supabaseRosters = data.map(r => ({
+          id: r.id,
+          handle: r.handle,
+          name: r.name,
+          game: r.game,
+          role: r.role,
+          kda: r.kda,
+          winRate: r.win_rate,
+          country: r.country,
+          flag: r.flag,
+          image: r.image,
+          signatureAgent: r.signature_agent,
+          gear: r.gear
+        }));
+      }
+    } catch (err) {
+      console.error('Supabase fetch rosters error:', err);
+    }
   }
-  res.json({ success: true, count: filtered.length, data: filtered });
+
+  // Local fallback rosters matching the game
+  let localFiltered = rosters;
+  if (game && game !== 'All') {
+    localFiltered = rosters.filter(r => r.game.toLowerCase() === game.toLowerCase());
+  }
+  
+  // Merge Supabase rosters with local rosters (Supabase takes precedence, avoiding duplicates by ID)
+  const merged = [...supabaseRosters];
+  const supabaseIds = new Set(supabaseRosters.map(r => r.id));
+  
+  for (const localPlayer of localFiltered) {
+    if (!supabaseIds.has(localPlayer.id)) {
+      merged.push(localPlayer);
+    }
+  }
+
+  res.json({ success: true, count: merged.length, data: merged });
 });
 
 app.get('/api/news', (req, res) => {
@@ -445,17 +488,32 @@ app.post('/api/admin/settings/logo', (req, res) => {
 });
 
 // Roster CRUD
-app.post('/api/admin/rosters', (req, res) => {
+app.post('/api/admin/rosters', async (req, res) => {
   const { id, handle, name, game, role, kda, winRate, country, flag, image, signatureAgent, gear } = req.body;
   if (id) {
+    if (supabase) {
+      try {
+        await supabase.from('rosters').upsert({
+          id, handle, name, game, role, kda, win_rate: winRate, country, flag, image, signature_agent: signatureAgent, gear
+        });
+      } catch (err) {
+        console.error('Supabase update roster error:', err);
+      }
+    }
+
     const idx = rosters.findIndex(p => p.id === id);
     if (idx !== -1) {
       rosters[idx] = { id, handle, name, game, role, kda, winRate, country, flag, image, signatureAgent, gear };
       return res.json({ success: true, message: 'Player updated successfully', data: rosters[idx] });
+    } else {
+      // If updating a player that only exists in Supabase (not in local array)
+      return res.json({ success: true, message: 'Player updated successfully' });
     }
   }
+
+  const newPlayerId = 'p_' + Date.now();
   const newPlayer = {
-    id: 'p_' + Date.now(),
+    id: newPlayerId,
     handle: handle || 'NEW ATHLETE',
     name: name || 'Pro Player',
     game: game || 'Valorant',
@@ -468,18 +526,51 @@ app.post('/api/admin/rosters', (req, res) => {
     signatureAgent: signatureAgent || 'Jett',
     gear: gear || 'Pro Mouse & Keyboard'
   };
+
+  if (supabase) {
+    try {
+      await supabase.from('rosters').insert([{
+        id: newPlayer.id,
+        handle: newPlayer.handle,
+        name: newPlayer.name,
+        game: newPlayer.game,
+        role: newPlayer.role,
+        kda: newPlayer.kda,
+        win_rate: newPlayer.winRate,
+        country: newPlayer.country,
+        flag: newPlayer.flag,
+        image: newPlayer.image,
+        signature_agent: newPlayer.signatureAgent,
+        gear: newPlayer.gear
+      }]);
+    } catch (err) {
+      console.error('Supabase insert roster error:', err);
+    }
+  }
+
   rosters.unshift(newPlayer);
   res.json({ success: true, message: 'Player created successfully', data: newPlayer });
 });
 
-app.delete('/api/admin/rosters/:id', (req, res) => {
+app.delete('/api/admin/rosters/:id', async (req, res) => {
   const id = req.params.id;
+  
+  if (supabase) {
+    try {
+      await supabase.from('rosters').delete().eq('id', id);
+    } catch (err) {
+      console.error('Supabase delete roster error:', err);
+    }
+  }
+
   const idx = rosters.findIndex(p => p.id === id);
   if (idx !== -1) {
     rosters.splice(idx, 1);
     return res.json({ success: true, message: 'Player deleted' });
   }
-  res.status(404).json({ success: false, message: 'Player not found' });
+  
+  // If deleted from Supabase but wasn't in local array
+  res.json({ success: true, message: 'Player deleted' });
 });
 
 // Matches CRUD
