@@ -154,6 +154,14 @@ function previewPlayerPhoto(e) {
   const hiddenInput = document.getElementById('p-image');
 
   if (file && preview && hiddenInput) {
+    // Vercel Serverless Functions have a 4.5MB body limit. 
+    // Base64 encoding adds ~33% overhead. Limit file to 2.5MB.
+    if (file.size > 2.5 * 1024 * 1024) {
+      alert("Image is too large! Please select an image smaller than 2.5MB to avoid server limits.");
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (evt) => {
       preview.src = evt.target.result;
@@ -257,6 +265,13 @@ async function savePlayer(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(player)
     });
+    
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await res.text();
+      throw new Error(`Server returned non-JSON (${res.status}): ` + text.substring(0, 100));
+    }
+    
     const json = await res.json();
     if (json.success) {
       if (window.showToast) showToast(json.message || 'Player saved successfully!');
@@ -266,7 +281,7 @@ async function savePlayer(e) {
       alert('Failed to save: ' + (json.message || 'Unknown error'));
     }
   } catch (e) {
-    alert('Network error or server failed to respond.');
+    alert('Request Failed: ' + e.message);
   }
 }
 
