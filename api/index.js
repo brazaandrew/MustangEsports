@@ -493,11 +493,13 @@ app.post('/api/admin/rosters', async (req, res) => {
   if (id) {
     if (supabase) {
       try {
-        await supabase.from('rosters').upsert({
+        const { error } = await supabase.from('rosters').upsert({
           id, handle, name, game, role, kda, win_rate: winRate, country, flag, image, signature_agent: signatureAgent, gear
         });
+        if (error) throw error;
       } catch (err) {
         console.error('Supabase update roster error:', err);
+        return res.status(500).json({ success: false, message: 'Database Error: ' + err.message });
       }
     }
 
@@ -529,7 +531,7 @@ app.post('/api/admin/rosters', async (req, res) => {
 
   if (supabase) {
     try {
-      await supabase.from('rosters').insert([{
+      const { error } = await supabase.from('rosters').insert([{
         id: newPlayer.id,
         handle: newPlayer.handle,
         name: newPlayer.name,
@@ -543,8 +545,10 @@ app.post('/api/admin/rosters', async (req, res) => {
         signature_agent: newPlayer.signatureAgent,
         gear: newPlayer.gear
       }]);
+      if (error) throw error;
     } catch (err) {
       console.error('Supabase insert roster error:', err);
+      return res.status(500).json({ success: false, message: 'Database Error: ' + err.message });
     }
   }
 
@@ -557,9 +561,11 @@ app.delete('/api/admin/rosters/:id', async (req, res) => {
   
   if (supabase) {
     try {
-      await supabase.from('rosters').delete().eq('id', id);
+      const { error } = await supabase.from('rosters').delete().eq('id', id);
+      if (error) throw error;
     } catch (err) {
       console.error('Supabase delete roster error:', err);
+      return res.status(500).json({ success: false, message: 'Database Error: ' + err.message });
     }
   }
 
