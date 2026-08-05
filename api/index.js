@@ -491,9 +491,9 @@ app.post('/api/admin/settings/logo', (req, res) => {
 app.post('/api/admin/rosters', async (req, res) => {
   const { id, handle, name, game, role, kda, winRate, country, flag, image, signatureAgent, gear } = req.body;
   
-  // Strict check: if deployed on Vercel, Supabase MUST be connected for edits to persist
   if (process.env.VERCEL && !supabase) {
-    return res.status(500).json({ success: false, message: 'Supabase Environment Variables are missing in Vercel Settings!' });
+    const diagnostic = !process.env.SUPABASE_URL ? 'Missing URL' : (!process.env.SUPABASE_ANON_KEY ? 'Missing Key' : 'Variables found but connection failed (invalid format?)');
+    return res.status(500).json({ success: false, message: 'Supabase Environment Variables error in Vercel: ' + diagnostic });
   }
 
   if (id) {
@@ -566,7 +566,8 @@ app.delete('/api/admin/rosters/:id', async (req, res) => {
   const id = req.params.id;
   
   if (process.env.VERCEL && !supabase) {
-    return res.status(500).json({ success: false, message: 'Supabase Environment Variables are missing in Vercel Settings!' });
+    const diagnostic = !process.env.SUPABASE_URL ? 'Missing URL' : (!process.env.SUPABASE_ANON_KEY ? 'Missing Key' : 'Variables found but connection failed (invalid format?)');
+    return res.status(500).json({ success: false, message: 'Supabase Environment Variables error in Vercel: ' + diagnostic });
   }
   
   if (supabase) {
